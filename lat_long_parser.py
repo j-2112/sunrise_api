@@ -26,13 +26,14 @@ class LatLongParser:
     frmt_lat_long : meth
         Gets lat / long from either state id or state name
     """
+    DEFAULT_STATE = "Nebraska"
 
     df = pd.read_csv("state_lat_long.csv")
     state_id_dictionary = {row["id"]: {"lat": row["lat"], "long": row["long"]} for index, row in df.iterrows()}
     state_name_dictionary = {row["state"]: {"lat": row["lat"], "long": row["long"]} for index, row in df.iterrows()}
 
     @classmethod
-    def frmt_lat_long(cls, name_or_id: str = "Nebraska") -> str:
+    def frmt_state_lat_long(cls, name_or_id: str = DEFAULT_STATE) -> str:
         if len(name_or_id) == 2:
             state_id = name_or_id.upper().strip()
             if state_id not in LatLongParser.state_id_dictionary.keys():
@@ -48,7 +49,11 @@ class LatLongParser:
                 return f'lat={LatLongParser.state_name_dictionary[state_name]["lat"]}' \
                        f'&lng={LatLongParser.state_name_dictionary[state_name]["long"]}'
 
+    @classmethod
+    def frmt_lat_long(cls, lat, long):
+        return f'lat={lat}' \
+               f'&lng={long}'
 
-print(LatLongParser.frmt_lat_long("ne"))
 
-
+if __name__ == "__main__":
+    print(LatLongParser.frmt_state_lat_long("ne"))

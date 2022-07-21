@@ -10,19 +10,25 @@ from datetime import datetime, timedelta
 class ApiCall:
     OFFSET_HOURS = 6
     FRMT_STRING = "%I:%M:%S %p"
+    _API = "https://api.sunrise-sunset.org/json?"
 
     def __init__(self, state_name_or_id: str = None, lat: str = None, long: str = None):
-        self.state = state_name_or_id
+        self.state_name_or_id = state_name_or_id  # if state_name_or_id is not None else LatLongParser.DEFAULT_STATE
         self.lat: str = lat
         self.long: str = long
-        self._api = "https://api.sunrise-sunset.org/json?"
 
     def raw_sunset_sunrise(self):
-        lat_long = LatLongParser.frmt_lat_long(self.state)
-        r = requests.get(self._api + lat_long)
-        sunrise_time_obj = datetime.strptime(r.json()["results"]["sunrise"], ApiCall.FRMT_STRING)
-        sunset_time_obj = datetime.strptime(r.json()["results"]["sunset"], ApiCall.FRMT_STRING)
-        return sunrise_time_obj, sunset_time_obj
+        if self.state_name_or_id is not None:
+            state_lat_long = LatLongParser.frmt_state_lat_long(self.state_name_or_id)
+            r = requests.get(ApiCall._API + state_lat_long)
+            sunrise_time_obj = datetime.strptime(r.json()["results"]["sunrise"], ApiCall.FRMT_STRING)
+            sunset_time_obj = datetime.strptime(r.json()["results"]["sunset"], ApiCall.FRMT_STRING)
+            return sunrise_time_obj, sunset_time_obj
+        else:
+            r = requests.get(ApiCall._API + LatLongParser.frmt_lat_long(self.lat, self.long))
+            sunrise_time_obj = datetime.strptime(r.json()["results"]["sunrise"], ApiCall.FRMT_STRING)
+            sunset_time_obj = datetime.strptime(r.json()["results"]["sunset"], ApiCall.FRMT_STRING)
+            return sunrise_time_obj, sunset_time_obj
 
     def convert_raw_to_mtn(self):
         """Gets return value from raw_sunset_sunrise and performs string formatting"""
@@ -41,6 +47,7 @@ class ApiCall:
 
 # TODO: AZ Does not observe DST, account for this
 
-a = ApiCall("AZ")
+if __name__ == "__main__":
+    b = ApiCall("Maine")
+    print(b.convert_raw_to_mtn())
 
-print(a.convert_raw_to_mtn())
